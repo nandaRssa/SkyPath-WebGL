@@ -19,6 +19,7 @@ export class FPVCameraController {
       camera = null,
       scene = null,
       movementSystem = null,
+      orbitControls = null,
     } = options;
 
     // =====================================
@@ -29,6 +30,7 @@ export class FPVCameraController {
     this.camera = camera;
     this.scene = scene;
     this.movementSystem = movementSystem;
+    this.orbitControls = orbitControls;
 
     if (!this.drone || !this.camera || !this.scene) {
       console.warn(
@@ -78,9 +80,9 @@ export class FPVCameraController {
     // CAMERA OFFSETS
     // =====================================
 
-    // THIRD PERSON
+    // THIRD PERSON — cukup luas untuk melihat keseluruhan kota
     this.thirdPersonOffset =
-      new THREE.Vector3(0, 6, 8);
+      new THREE.Vector3(0, 35, 50);
 
     // FPV
     this.fpvOffset =
@@ -163,6 +165,11 @@ export class FPVCameraController {
     this.startQuaternion =
       this.camera.quaternion.clone();
 
+    // Aktifkan OrbitControls hanya di THIRD_PERSON
+    if (this.orbitControls) {
+      this.orbitControls.enabled = (this.mode === 'THIRD_PERSON');
+    }
+
     console.log(
       `[FPVCameraController] Switching to ${newMode}`
     );
@@ -173,35 +180,8 @@ export class FPVCameraController {
   // =====================================
 
   _updateThirdPerson(dt) {
-
-    // POSITION
-    this.targetPosition =
-      this._getWorldPosition(
-        this.thirdPersonOffset
-      );
-
-    this.camera.position.lerp(
-      this.targetPosition,
-      this.lerpSpeed
-    );
-
-    // ROTATION
-    this._tempCamera.position.copy(
-      this.camera.position
-    );
-
-    this._tempCamera.lookAt(
-      this.drone.position
-    );
-
-    this.targetQuaternion.copy(
-      this._tempCamera.quaternion
-    );
-
-    this.camera.quaternion.slerp(
-      this.targetQuaternion,
-      this.slerpSpeed
-    );
+    // Posisi & rotasi di-handle sepenuhnya oleh OrbitControls
+    // User bebas zoom in/out & orbit via right-click drag
   }
 
   // =====================================

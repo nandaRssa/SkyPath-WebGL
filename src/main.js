@@ -59,6 +59,7 @@ const cameraController = new FPVCameraController({
   camera: world.getCamera(),
   scene: world.getScene(),
   movementSystem: movement,
+  orbitControls: world.controls,
 });
 
 // ========== HUD ==========
@@ -328,10 +329,10 @@ function animate(time) {
   const delta = Math.min((time - lastTime) / 1000, 0.1);
   lastTime = time;
 
-  world.update(delta);
+  cameraController.update(delta);
   pathfinding.update(delta);
   movement.update(delta);
-  cameraController.update(delta);
+  world.update(delta);
 
   const pos = world.drone.position;
 
