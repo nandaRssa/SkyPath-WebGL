@@ -273,11 +273,12 @@ export class SceneManager {
       this.rotors.forEach((r) => (r.rotation.y += delta * 30));
     }
 
-    // OrbitControls target ikuti posisi drone
+    // OrbitControls — update target hanya jika bukan FREE mode
     if (this.controls) {
-      this.controls.target.copy(this.drone.position);
       if (this.controls.enabled) {
         this.controls.update();
+      } else {
+        this.controls.target.copy(this.drone.position);
       }
     }
 

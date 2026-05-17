@@ -60,6 +60,7 @@ const cameraController = new FPVCameraController({
   scene: world.getScene(),
   movementSystem: movement,
   orbitControls: world.controls,
+  domElement: world.getRenderer().domElement,
 });
 
 // ========== HUD ==========
@@ -294,13 +295,13 @@ movement.onStateChange = (state) => {
 };
 
 // ========== CAMERA TOGGLE ==========
+const MODE_NAMES = { FREE: 'FREE CAM', FOLLOW: 'FOLLOW CAM', FPV: 'FPV' };
+function updateCameraBadge() {
+  badgeCamera.innerHTML = `<img src="${BASE}icons/camera.svg"> ${MODE_NAMES[cameraController.mode] || cameraController.mode}`;
+}
 input._onCameraToggle = () => {
   cameraController.toggleMode();
-  if (cameraController.mode === 'FPV') {
-    badgeCamera.innerHTML = `<img src="${BASE}icons/camera.svg"> FPV`;
-  } else {
-    badgeCamera.innerHTML = `<img src="${BASE}icons/camera.svg"> THIRD PERSON`;
-  }
+  updateCameraBadge();
 };
 
 // ========== ROUTE STATUS HELPER ==========
@@ -321,17 +322,19 @@ window.skyPathMovement = movement;
 document.addEventListener('keydown', (e) => {
   if (e.key === '=' || e.key === '+') {
     e.preventDefault();
-    const controls = world.controls;
-    if (controls && controls.enabled) {
-      controls._dollyIn(0.85);
-      controls.update();
+    if (cameraController.mode === 'FOLLOW') {
+      cameraController._followRadius *= 0.92;
+    } else if (world.controls?.enabled) {
+      world.controls._dollyIn(0.85);
+      world.controls.update();
     }
   } else if (e.key === '-') {
     e.preventDefault();
-    const controls = world.controls;
-    if (controls && controls.enabled) {
-      controls._dollyOut(0.85);
-      controls.update();
+    if (cameraController.mode === 'FOLLOW') {
+      cameraController._followRadius *= 1.08;
+    } else if (world.controls?.enabled) {
+      world.controls._dollyOut(0.85);
+      world.controls.update();
     }
   }
 });
@@ -364,9 +367,7 @@ function animate(time) {
     if (!window._gpB2 && gp.buttons[2]?.pressed) {
       window._gpB2 = true;
       cameraController.toggleMode();
-      badgeCamera.innerHTML = cameraController.mode === 'FPV'
-        ? `<img src="${BASE}icons/camera.svg"> FPV`
-        : `<img src="${BASE}icons/camera.svg"> THIRD PERSON`;
+      updateCameraBadge();
     }
     if (window._gpB2 && !gp.buttons[2]?.pressed) window._gpB2 = false;
     if (!window._gpB3 && gp.buttons[3]?.pressed) {
@@ -374,12 +375,18 @@ function animate(time) {
       input._toggleMode?.();
     }
     if (window._gpB3 && !gp.buttons[3]?.pressed) window._gpB3 = false;
-    // Right stick → camera orbit via OrbitControls
+    // Right stick → camera orbit
     if (Math.abs(rx) > deadZone || Math.abs(ry) > deadZone) {
-      const ctrl = world.controls;
-      if (ctrl && ctrl.enabled) {
-        ctrl._rotateLeft(-rx * delta * 3);
-        ctrl._rotateUp(-ry * delta * 3);
+      if (cameraController.mode === 'FOLLOW') {
+        cameraController._followTheta -= rx * delta * 2;
+        cameraController._followPhi   += ry * delta * 2;
+        cameraController._followPhi = Math.max(-1.4, Math.min(1.4, cameraController._followPhi));
+      } else {
+        const ctrl = world.controls;
+        if (ctrl?.enabled) {
+          ctrl._rotateLeft(-rx * delta * 3);
+          ctrl._rotateUp(-ry * delta * 3);
+        }
       }
     }
   }
