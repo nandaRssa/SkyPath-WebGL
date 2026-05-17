@@ -305,28 +305,39 @@ export class MovementSystem {
         this.grid.inBounds(gx, gz)
       ) {
 
-        const bb =
-          this._buildingBounds.get(
-            `${gx},${gz}`
-          );
+        const bldgHeight =
+          this.grid.getBuildingHeight(gx, gz);
 
-        if (!bb) {
+        if (pos.y > bldgHeight + 0.5) {
 
           pos.x = newPos.x;
           pos.z = newPos.z;
 
         } else {
 
-          const outsideX =
-            Math.abs(newPos.x - bb.cx) > bb.hw;
+          const bb =
+            this._buildingBounds.get(
+              `${gx},${gz}`
+            );
 
-          const outsideZ =
-            Math.abs(newPos.z - bb.cz) > bb.hd;
-
-          if (outsideX || outsideZ) {
+          if (!bb) {
 
             pos.x = newPos.x;
             pos.z = newPos.z;
+
+          } else {
+
+            const outsideX =
+              Math.abs(newPos.x - bb.cx) > bb.hw;
+
+            const outsideZ =
+              Math.abs(newPos.z - bb.cz) > bb.hd;
+
+            if (outsideX || outsideZ) {
+
+              pos.x = newPos.x;
+              pos.z = newPos.z;
+            }
           }
         }
       }
@@ -361,6 +372,13 @@ export class MovementSystem {
     }
 
     if (this.grid.isWalkable(gx, gz)) {
+      return false;
+    }
+
+    const bldgHeight =
+      this.grid.getBuildingHeight(gx, gz);
+
+    if (worldPos.y > bldgHeight + 0.5) {
       return false;
     }
 

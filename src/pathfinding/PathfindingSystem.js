@@ -105,15 +105,17 @@ export class PathfindingSystem {
     ex = Math.max(0, Math.min(grid.cols - 1, ex));
     ez = Math.max(0, Math.min(grid.rows - 1, ez));
 
+    const alt = this.drone ? this.drone.position.y : this.droneAltitude;
+
     // Resolve start walkable
-    if (!grid.isWalkable(sx, sz)) {
+    if (!grid.isWalkableFromAltitude(sx, sz, alt)) {
       const near = this._findNearestWalkable(sx, sz);
       if (near) { sx = near.gx; sz = near.gz; }
     }
 
     // Resolve end walkable
     let resolvedEx = ex, resolvedEz = ez;
-    if (!grid.isWalkable(ex, ez)) {
+    if (!grid.isWalkableFromAltitude(ex, ez, alt)) {
       const near = this._findNearestWalkable(ex, ez);
       if (!near) {
         this._showToast(`<img src="${BASE}icons/x.svg" class="hud-icon"> Target tidak terjangkau!`, '#ff4444');
@@ -430,18 +432,20 @@ export class PathfindingSystem {
         return path;
       }
 
+      const alt = this.drone ? this.drone.position.y : this.droneAltitude;
+
       for (const [dx, dz, cost] of dirs) {
         const nx   = cur.gx + dx;
         const nz   = cur.gz + dz;
         const nKey = `${nx},${nz}`;
 
         if (!grid.inBounds(nx, nz))   continue;
-        if (!grid.isWalkable(nx, nz)) continue;
+        if (!grid.isWalkableFromAltitude(nx, nz, alt)) continue;
         if (closed.has(nKey))         continue;
 
         if (dx !== 0 && dz !== 0) {
-          if (!grid.isWalkable(cur.gx + dx, cur.gz)) continue;
-          if (!grid.isWalkable(cur.gx, cur.gz + dz)) continue;
+          if (!grid.isWalkableFromAltitude(cur.gx + dx, cur.gz, alt)) continue;
+          if (!grid.isWalkableFromAltitude(cur.gx, cur.gz + dz, alt)) continue;
         }
 
         const tentG    = cur.g + cost;
@@ -477,12 +481,13 @@ export class PathfindingSystem {
   }
 
   _findNearestWalkable(gx, gz, maxR = 6) {
+    const alt = this.drone ? this.drone.position.y : this.droneAltitude;
     for (let r = 1; r <= maxR; r++) {
       for (let dx = -r; dx <= r; dx++) {
         for (let dz = -r; dz <= r; dz++) {
           if (Math.abs(dx) !== r && Math.abs(dz) !== r) continue;
           const nx = gx + dx, nz = gz + dz;
-          if (this.grid.inBounds(nx, nz) && this.grid.isWalkable(nx, nz))
+          if (this.grid.inBounds(nx, nz) && this.grid.isWalkableFromAltitude(nx, nz, alt))
             return { gx: nx, gz: nz };
         }
       }

@@ -96,7 +96,7 @@ export class SceneManager {
     this.controls.maxDistance = 500;
 
     this.controls.minPolarAngle = 0;
-    this.controls.maxPolarAngle = Math.PI / 2 + 0.15;
+    this.controls.maxPolarAngle = Math.PI;
 
     this.controls.touches = {
       ONE:  THREE.TOUCH.PAN,       // 1 jari = pan (bukan rotate, biar gak konflik)

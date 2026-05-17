@@ -21,10 +21,13 @@ export class Grid {
     this.mainRoadZ = Math.round(this.mainRoadZ / roadInterval) * roadInterval;
 
     this.cells = [];
+    this.buildingHeights = [];
     for (let gz = 0; gz < this.rows; gz++) {
       this.cells[gz] = [];
+      this.buildingHeights[gz] = [];
       for (let gx = 0; gx < this.cols; gx++) {
         this.cells[gz][gx] = 0;
+        this.buildingHeights[gz][gx] = 0;
       }
     }
 
@@ -91,6 +94,22 @@ export class Grid {
   isWalkable(gx, gz) {
     if (!this.inBounds(gx, gz)) return false;
     return this.cells[gz][gx] === 0;
+  }
+
+  setBuildingHeight(gx, gz, height) {
+    if (!this.inBounds(gx, gz)) return;
+    this.buildingHeights[gz][gx] = height;
+  }
+
+  getBuildingHeight(gx, gz) {
+    if (!this.inBounds(gx, gz)) return 0;
+    return this.buildingHeights[gz][gx] || 0;
+  }
+
+  isWalkableFromAltitude(gx, gz, altitude) {
+    if (!this.inBounds(gx, gz)) return false;
+    if (this.cells[gz][gx] === 0) return true;
+    return altitude > this.getBuildingHeight(gx, gz) + 0.5;
   }
 
   inBounds(gx, gz) {

@@ -351,6 +351,7 @@ export class Building {
     
     // Set obstacle ke grid
     grid.setCell(gx, gz, 1);
+    grid.setBuildingHeight(gx, gz, this.targetHeight);
   }
 
   _buildStructure() {
@@ -579,6 +580,7 @@ export class Building {
           const wp = grid.gridToWorld(gx, gz);
           extras.add(createPark(wp.x, wp.z, grid.cellSize));
           grid.setCell(gx, gz, 1);
+          grid.setBuildingHeight(gx, gz, 0);
         }
       }
     }
@@ -594,6 +596,7 @@ export class Building {
           const wp = grid.gridToWorld(gx, gz);
           extras.add(createParkingLot(wp.x, wp.z, grid.cellSize));
           grid.setCell(gx, gz, 1);
+          grid.setBuildingHeight(gx, gz, 0);
           continue;
         }
         
