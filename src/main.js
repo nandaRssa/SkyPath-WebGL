@@ -317,6 +317,25 @@ window.skyPathWorld    = world;
 window.skyPathFinding  = pathfinding;
 window.skyPathMovement = movement;
 
+// ========== KEYBOARD CAMERA ZOOM ==========
+document.addEventListener('keydown', (e) => {
+  if (e.key === '=' || e.key === '+') {
+    e.preventDefault();
+    const controls = world.controls;
+    if (controls && controls.enabled) {
+      controls._dollyIn(0.85);
+      controls.update();
+    }
+  } else if (e.key === '-') {
+    e.preventDefault();
+    const controls = world.controls;
+    if (controls && controls.enabled) {
+      controls._dollyOut(0.85);
+      controls.update();
+    }
+  }
+});
+
 // ========== FPS TRACKING ==========
 let frameCount = 0;
 let fpsTimer   = 0;
@@ -328,6 +347,42 @@ function animate(time) {
 
   const delta = Math.min((time - lastTime) / 1000, 0.1);
   lastTime = time;
+
+  // ========== GAMEPAD ==========
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const gp of gamepads) {
+    if (!gp) continue;
+    const [lx, ly, rx, ry] = gp.axes;
+    const deadZone = 0.15;
+    movement.inputState.forward    = ly < -deadZone;
+    movement.inputState.backward   = ly >  deadZone;
+    movement.inputState.rotateLeft = lx < -deadZone;
+    movement.inputState.rotateRight= lx >  deadZone;
+    movement.inputState.up         = !!gp.buttons[0]?.pressed;
+    movement.inputState.down       = !!gp.buttons[1]?.pressed;
+    // Tombol X (2) → toggle camera, Y (3) → toggle flight mode
+    if (!window._gpB2 && gp.buttons[2]?.pressed) {
+      window._gpB2 = true;
+      cameraController.toggleMode();
+      badgeCamera.innerHTML = cameraController.mode === 'FPV'
+        ? `<img src="${BASE}icons/camera.svg"> FPV`
+        : `<img src="${BASE}icons/camera.svg"> THIRD PERSON`;
+    }
+    if (window._gpB2 && !gp.buttons[2]?.pressed) window._gpB2 = false;
+    if (!window._gpB3 && gp.buttons[3]?.pressed) {
+      window._gpB3 = true;
+      input._toggleMode?.();
+    }
+    if (window._gpB3 && !gp.buttons[3]?.pressed) window._gpB3 = false;
+    // Right stick → camera orbit via OrbitControls
+    if (Math.abs(rx) > deadZone || Math.abs(ry) > deadZone) {
+      const ctrl = world.controls;
+      if (ctrl && ctrl.enabled) {
+        ctrl._rotateLeft(-rx * delta * 3);
+        ctrl._rotateUp(-ry * delta * 3);
+      }
+    }
+  }
 
   cameraController.preUpdate(delta);
   pathfinding.update(delta);

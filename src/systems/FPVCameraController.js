@@ -36,9 +36,11 @@ export class FPVCameraController {
     this.startPosition = this.camera.position.clone();
     this.startQuaternion = this.camera.quaternion.clone();
 
-    // Offset kamera dari drone (world-space)
+    // Offset kamera dari drone (world-space) — dicatat setelah controls.update()
     this._savedOffset = new THREE.Vector3();
     this._savedOffset.copy(this.camera.position).sub(this.drone.position);
+    // Posisi drone sebelumnya, untuk menghitung delta per frame
+    this._prevDronePosition = this.drone.position.clone();
 
     this.thirdPersonOffset = new THREE.Vector3(0, 35, 50);
     this.fpvOffset = new THREE.Vector3(0, 0.5, -0.2);
@@ -53,18 +55,18 @@ export class FPVCameraController {
 
   // =====================================
   // PRE-UPDATE — sebelum controls.update()
-  // Reposisi kamera ke drone + offset terakhir
-  // agar controls.update() menghitung spherical
-  // dari posisi yang benar
+  // Geser kamera sebesar delta pergerakan drone,
+  // tanpa meng-override zoom/orbit user
   // =====================================
 
   preUpdate(dt) {
     if (!this.drone || !this.camera) return;
 
-    // Hanya di THIRD_PERSON stabil (tidak sedang transisi)
     if (this.mode === 'THIRD_PERSON' && !this.isTransitioning) {
-      this.camera.position.copy(this.drone.position).add(this._savedOffset);
+      const delta = new THREE.Vector3().copy(this.drone.position).sub(this._prevDronePosition);
+      this.camera.position.add(delta);
     }
+    this._prevDronePosition.copy(this.drone.position);
   }
 
   // =====================================
