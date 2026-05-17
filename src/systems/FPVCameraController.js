@@ -115,19 +115,9 @@ export class FPVCameraController {
         this.orbitControls.target.copy(this.drone.position);
       }
       if (newMode === 'FOLLOW') {
-        const off = new THREE.Vector3().copy(this.camera.position).sub(this.drone.position);
-        const dist = off.length();
-        if (dist < 2) {
-          this._followRadius = 50;
-          this._followTheta = 0;
-          this._followPhi = 0.6;
-        } else {
-          this._invQuat.copy(this.drone.quaternion).invert();
-          const localOff = off.applyQuaternion(this._invQuat);
-          this._followRadius = Math.max(3, Math.min(500, dist));
-          this._followTheta = Math.atan2(localOff.x, -localOff.z);
-          this._followPhi = Math.asin(Math.max(-1.4, Math.min(1.4, localOff.y / dist)));
-        }
+        this._followRadius = 50;
+        this._followTheta = 0;
+        this._followPhi = 0.6;
       }
     }
     console.log(`[FPVCameraController] ${oldMode} → ${newMode}`);
@@ -139,10 +129,11 @@ export class FPVCameraController {
 
   _updateFollow(dt) {
     const { _followRadius: r, _followTheta: t, _followPhi: p } = this;
+    // drone forward = -Z, jadi +Z = belakang drone
     this._localOffset.set(
       r * Math.cos(p) * Math.sin(t),
       r * Math.sin(p),
-      -r * Math.cos(p) * Math.cos(t)
+      r * Math.cos(p) * Math.cos(t)
     );
     this._localOffset.applyQuaternion(this.drone.quaternion);
     this.camera.position.copy(this.drone.position).add(this._localOffset);
@@ -191,7 +182,7 @@ export class FPVCameraController {
     this._localOffset.set(
       r * Math.cos(p) * Math.sin(t),
       r * Math.sin(p),
-      -r * Math.cos(p) * Math.cos(t)
+      r * Math.cos(p) * Math.cos(t)
     );
     this._localOffset.applyQuaternion(this.drone.quaternion);
     this.targetPosition.copy(this.drone.position).add(this._localOffset);
@@ -219,8 +210,8 @@ export class FPVCameraController {
     if (!this._isOrbiting || this.mode !== 'FOLLOW') return;
     const dx = e.clientX - this._lastPointer.x;
     const dy = e.clientY - this._lastPointer.y;
-    this._followTheta -= dx * 0.008;
-    this._followPhi += dy * 0.008;
+    this._followTheta += dx * 0.008;
+    this._followPhi -= dy * 0.008;
     this._followPhi = Math.max(-1.4, Math.min(1.4, this._followPhi));
     this._lastPointer.x = e.clientX;
     this._lastPointer.y = e.clientY;

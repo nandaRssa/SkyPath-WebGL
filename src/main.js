@@ -378,8 +378,8 @@ function animate(time) {
     // Right stick → camera orbit
     if (Math.abs(rx) > deadZone || Math.abs(ry) > deadZone) {
       if (cameraController.mode === 'FOLLOW') {
-        cameraController._followTheta -= rx * delta * 2;
-        cameraController._followPhi   += ry * delta * 2;
+        cameraController._followTheta += rx * delta * 2;
+        cameraController._followPhi   -= ry * delta * 2;
         cameraController._followPhi = Math.max(-1.4, Math.min(1.4, cameraController._followPhi));
       } else {
         const ctrl = world.controls;
