@@ -275,13 +275,10 @@ export class SceneManager {
 
     // OrbitControls target ikuti posisi drone
     if (this.controls) {
-      const dist = this.controls.target.distanceTo(this.drone.position);
-      if (dist > 0.1) {
-        this.controls.target.lerp(this.drone.position, 0.2);
-      } else {
-        this.controls.target.copy(this.drone.position);
+      this.controls.target.copy(this.drone.position);
+      if (this.controls.enabled) {
+        this.controls.update();
       }
-      this.controls.update();
     }
 
     // Animasi awan
